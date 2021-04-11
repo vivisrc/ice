@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ice - snowflake utility</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        font: inherit;
+        color: inherit;
+      }
+
+      body {
+        margin: 0;
+        padding: 96px 16px;
+
+        display: flex;
+        flex-flow: column;
+        align-items: center;
+
+        font-family: "IBM Plex Mono", monospace;
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 1.5;
+      }
+
+      header {
+        margin-bottom: 32px;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 38px;
+        margin: 0;
+      }
+
+      p {
+        margin: 0;
+      }
+
+      footer {
+        margin-top: 32px;
+      }
+
+      form {
+        width: 400px;
+      }
+
+      fieldset {
+        border: 1px solid lightgrey;
+        margin: 0;
+        margin-top: 16px;
+        padding: 8px 16px 12px;
+      }
+
+      legend {
+        padding: 0 2px;
+        margin-left: -2px;
+      }
+
+      input {
+        border: 1px solid darkgrey;
+        padding: 0 8px;
+        margin: 4px 0;
+      }
+
+      .input + .input-text {
+        margin-top: 8px;
+      }
+
+      .input-text > label {
+        display: block;
+      }
+
+      .input-text > input {
+        width: 100%;
+        height: 36px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>ice</h1>
+      <p>snowflake utility</p>
+    </header>
+
+    <form>
+      <div class="input input-text">
+        <label for="snowflake">snowflake</label>
+        <input
+          type="text"
+          name="snowflake"
+          id="snowflake"
+          min="0"
+          step="1"
+          value="0"
+        />
+      </div>
+
+      <fieldset id="group-parameters">
+        <legend>parameters</legend>
+
+        <div class="input input-text">
+          <label for="timestamp">timestamp</label>
+          <input
+            type="number"
+            name="timestamp"
+            id="timestamp"
+            value="0"
+            min="0"
+            step="1"
+          />
+        </div>
+
+        <div class="input input-text">
+          <label for="worker">worker</label>
+          <input
+            type="number"
+            name="worker"
+            id="worker"
+            value="0"
+            min="0"
+            max="31"
+            step="1"
+          />
+        </div>
+
+        <div class="input input-text">
+          <label for="process">process</label>
+          <input
+            type="number"
+            name="process"
+            id="process"
+            value="0"
+            min="0"
+            max="31"
+            step="1"
+          />
+        </div>
+
+        <div class="input input-text">
+          <label for="increment">increment</label>
+          <input
+            type="number"
+            name="increment"
+            id="increment"
+            value="0"
+            min="0"
+            max="4095"
+            step="1"
+          />
+        </div>
+      </fieldset>
+
+      <fieldset id="group-timestamp">
+        <legend>timestamp</legend>
+
+        <div class="input input-text">
+          <label for="ms">ms (since unix epoch)</label>
+          <input type="number" name="ms" id="ms" value="0" min="0" step="1" />
+        </div>
+
+        <div class="input input-text">
+          <label for="iso">iso</label>
+          <input
+            type="text"
+            name="iso"
+            id="iso"
+            value="1970-01-01T00:00:00.000Z"
+            readonly
+          />
+        </div>
+
+        <fieldset id="group-epoch">
+          <legend>epoch (relative to unix)</legend>
+
+          <div class="input input-radio">
+            <input
+              type="radio"
+              name="epoch-type"
+              value="unix"
+              id="epoch_unix"
+              checked
+            />
+            <label for="epoch_unix">unix</label>
+          </div>
+
+          <div class="input input-radio">
+            <input
+              type="radio"
+              name="epoch-type"
+              value="twitter"
+              id="epoch_twitter"
+            />
+            <label for="epoch_twitter">twitter</label>
+          </div>
+
+          <div class="input input-radio">
+            <input
+              type="radio"
+              name="epoch-type"
+              value="discord"
+              id="epoch_discord"
+            />
+            <label for="epoch_discord">discord</label>
+          </div>
+
+          <div class="input input-radio">
+            <input
+              type="radio"
+              name="epoch-type"
+              value="other"
+              id="epoch_other"
+            />
+            <label for="epoch_other">other</label>
+          </div>
+
+          <div class="input input-text">
+            <label for="epoch">value</label>
+            <input
+              type="number"
+              name="epoch"
+              id="epoch"
+              value="0"
+              min="0"
+              max="4398046511103"
+              step="1"
+            />
+          </div>
+        </fieldset>
+      </fieldset>
+    </form>
+
+    <footer>
+      <p>
+        <a href="https://github.com/vivisrc/ice">
+          https://github.com/vivisrc/ice
+        </a>
+      </p>
+    </footer>
+
+    <script>
+      {
+        const $ = Document.prototype.querySelector.bind(window.document);
+        const $$ = Document.prototype.querySelectorAll.bind(window.document);
+
+        $("form").addEventListener("submit", (event) => event.preventDefault());
+
+        const epochs = Object.entries({
+          unix: 0n,
+          twitter: 1142974214000n,
+          discord: 1420070400000n,
+        }).map(([name, value]) => ({ name, value }));
+
+        const getBigInt = (selector) => BigInt($(selector).value);
+
+        const updateSnowflake = () => {
+          const timestamp = getBigInt("#timestamp");
+          const worker = getBigInt("#worker") % 32n;
+          const process = getBigInt("#process") % 32n;
+          const increment = getBigInt("#increment") % 4096n;
+
+          const snowflake =
+            (timestamp << 22n) +
+            (worker << 17n) +
+            (process << 12n) +
+            (increment << 0n);
+          $("#snowflake").value = String(snowflake);
+        };
+
+        const updateParameters = () => {
+          const snowflake = getBigInt("#snowflake");
+          $("#timestamp").value = String(snowflake >> 22n);
+          $("#worker").value = String((snowflake & 0x3e0000n) >> 17n);
+          $("#process").value = String((snowflake & 0x1f000n) >> 12n);
+          $("#increment").value = String(snowflake & 0xfffn);
+        };
+
+        const updateTimestamp = () => {
+          const snowflake = getBigInt("#snowflake") >> 22n;
+          const epoch = getBigInt("#epoch");
+          $("#ms").value = String(snowflake + epoch);
+          try {
+            $("#iso").value = new Date(Number(snowflake + epoch)).toISOString();
+          } catch {
+            $("#iso").value = "?";
+          }
+        };
+
+        for (const radio of $$("input[name='epoch-type']")) {
+          radio.addEventListener("change", () => {
+            if (!radio.checked) return;
+            const epoch = epochs.find((epoch) => epoch.name === radio.value);
+            if (epoch) {
+              $("#epoch").value = epoch.value;
+              updateTimestamp();
+            }
+          });
+        }
+
+        $("#epoch").addEventListener("input", () => {
+          const epoch = epochs.find(
+            (epoch) => epoch.value === getBigInt("#epoch")
+          );
+          for (const radio of $$("input[name='epoch-type']")) {
+            radio.checked = radio.value === (epoch?.name ?? "other");
+          }
+          updateTimestamp();
+        });
+
+        for (const input of $$("#group-parameters input")) {
+          input.addEventListener("input", () => {
+            updateSnowflake();
+            updateTimestamp();
+          });
+        }
+
+        $("#snowflake").addEventListener("input", () => {
+          updateParameters();
+          updateTimestamp();
+        });
+
+        $("#ms").addEventListener("input", () => {
+          $("#timestamp").value = String(
+            getBigInt("#ms") - getBigInt("#epoch")
+          );
+          updateSnowflake();
+          updateTimestamp();
+        });
+      }
+    </script>
+  </body>
+</html>
